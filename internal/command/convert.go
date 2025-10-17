@@ -7,11 +7,11 @@ import (
 	"github.com/your-map/mbtiles-tool/internal/component/output"
 )
 
-// exampleCmd Command for build pipeline
-var exampleCmd = &cobra.Command{
-	Use:   constname.UseExampleCmd,
-	Short: constname.ShortExampleCmd,
-	Long:  constname.LongExampleCmd,
+// convertCmd Command for build pipeline
+var convertCmd = &cobra.Command{
+	Use:   constname.UseConvertCmd,
+	Short: constname.ShortConvertCmd,
+	Long:  constname.LongConvertCmd,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fields, err := form.Run()
 		if err != nil {
