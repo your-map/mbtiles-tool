@@ -5,10 +5,10 @@ import (
 	"os"
 
 	"github.com/charmbracelet/fang"
-	"github.com/deniskorbakov/skeleton-cli-go/configs/constname"
-	"github.com/deniskorbakov/skeleton-cli-go/internal/component/output"
-	"github.com/deniskorbakov/skeleton-cli-go/internal/version"
 	"github.com/spf13/cobra"
+	"github.com/your-map/mbtiles-tool/configs/constname"
+	"github.com/your-map/mbtiles-tool/internal/component/output"
+	"github.com/your-map/mbtiles-tool/internal/version"
 )
 
 // Run Start app with cobra cmd

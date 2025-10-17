@@ -1,10 +1,10 @@
 package command
 
 import (
-	"github.com/deniskorbakov/skeleton-cli-go/configs/constname"
-	"github.com/deniskorbakov/skeleton-cli-go/internal/component/form"
-	"github.com/deniskorbakov/skeleton-cli-go/internal/component/output"
 	"github.com/spf13/cobra"
+	"github.com/your-map/mbtiles-tool/configs/constname"
+	"github.com/your-map/mbtiles-tool/internal/component/form"
+	"github.com/your-map/mbtiles-tool/internal/component/output"
 )
 
 // exampleCmd Command for build pipeline

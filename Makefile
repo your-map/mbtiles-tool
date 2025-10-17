@@ -5,4 +5,4 @@ lint:
 # use command for build app
 build:
 	go mod vendor
-	go build -ldflags "-w -s" -o cli cmd/cli/main.go
+	go build -ldflags "-w -s" -o mbt cmd/mbt/main.go

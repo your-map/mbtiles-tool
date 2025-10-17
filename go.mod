@@ -1,4 +1,4 @@
-module github.com/deniskorbakov/skeleton-cli-go
+module github.com/your-map/mbtiles-tool
 
 go 1.25
 

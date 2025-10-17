@@ -2,14 +2,14 @@ package constname
 
 const (
 	// UseRootCmd App name and default name command
-	UseRootCmd = `cli`
+	UseRootCmd = `mbt`
 
 	// LongRootCmd Long description root command
-	LongRootCmd = `cli is a example util`
+	LongRootCmd = `mbt is a mbtiles convector`
 
 	// ExampleRootCmd Example use command
 	ExampleRootCmd = `
 #Run command for start
-cli example
+mbt example
 `
 )
