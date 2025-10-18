@@ -6,4 +6,3 @@ This utility can:
 - Gluing mbtiles files
 - Convert osm pbf to mbtiles
 
-test
