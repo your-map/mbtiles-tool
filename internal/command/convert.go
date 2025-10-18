@@ -4,12 +4,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/your-map/mbtiles-tool/configs/constname"
 	"github.com/your-map/mbtiles-tool/internal/component/output"
+	"github.com/your-map/mbtiles-tool/pkg/tiles"
 
 	convertForm "github.com/your-map/mbtiles-tool/internal/component/convert"
 )
 
 // convertCmd Command for build pipeline
-// @todo #2 Add use pkg for convert format
 var convertCmd = &cobra.Command{
 	Use:   constname.UseConvertCmd,
 	Short: constname.ShortConvertCmd,
@@ -20,7 +20,14 @@ var convertCmd = &cobra.Command{
 			return err
 		}
 
-		output.Green("Success pick file: ", fields.File)
+		pbfMap := tiles.NewMap(fields.File)
+
+		mbtMap, err := pbfMap.Convert(tiles.MBT)
+		if err != nil {
+			return err
+		}
+
+		output.Green("Success convert file: ", mbtMap.File)
 
 		return nil
 	},
