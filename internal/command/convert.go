@@ -9,6 +9,7 @@ import (
 )
 
 // convertCmd Command for build pipeline
+// @todo #2 Add use pkg for convert format
 var convertCmd = &cobra.Command{
 	Use:   constname.UseConvertCmd,
 	Short: constname.ShortConvertCmd,
