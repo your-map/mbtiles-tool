@@ -18,7 +18,7 @@ func NewMap(file string) *Map {
 	}
 }
 
-// @todo add base logic
+// @todo #3 add base logic
 func (m *Map) Convert(format Format) (*Map, error) {
 	switch format {
 	case MBT:
