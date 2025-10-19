@@ -1,12 +1,18 @@
 package tiles
 
-import "fmt"
-
-type Format string
+import (
+	"errors"
+	"fmt"
+	"os"
+)
 
 var (
 	MBT Format = "mbt"
+
+	ErrReadFile = errors.New("error reading file")
 )
+
+type Format string
 
 type Map struct {
 	File string
@@ -21,7 +27,13 @@ func NewMap(file string) *Map {
 func (m *Map) Convert(format Format) (*Map, error) {
 	switch format {
 	case MBT:
-		// @todo add use converter for map
+		data, err := os.ReadFile(m.File)
+		if err != nil {
+			return nil, ErrReadFile
+		}
+
+		fmt.Println(string(data))
+
 		return NewMap(m.File), nil
 	}
 
