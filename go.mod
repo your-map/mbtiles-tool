@@ -7,6 +7,7 @@ require (
 	github.com/charmbracelet/huh v0.7.0
 	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.3.0.20250917201909-41ff0bf215ea
 	github.com/spf13/cobra v1.10.1
+	google.golang.org/protobuf v1.36.10
 )
 
 require (
