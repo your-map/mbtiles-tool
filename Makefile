@@ -6,3 +6,7 @@ lint:
 build:
 	go mod vendor
 	go build -ldflags "-w -s" -o mbt cmd/mbt/main.go
+
+# use command for generate go files from proto
+osm-generate:
+	go generate internal/osmpbf/generate.go
