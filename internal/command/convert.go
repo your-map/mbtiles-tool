@@ -5,8 +5,6 @@ import (
 	"github.com/your-map/mbtiles-tool/configs/constname"
 	"github.com/your-map/mbtiles-tool/internal/component/output"
 	"github.com/your-map/mbtiles-tool/pkg/tiles"
-
-	convertForm "github.com/your-map/mbtiles-tool/internal/component/convert"
 )
 
 // convertCmd Command for build pipeline
@@ -15,12 +13,13 @@ var convertCmd = &cobra.Command{
 	Short: constname.ShortConvertCmd,
 	Long:  constname.LongConvertCmd,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fields, err := convertForm.Run()
-		if err != nil {
-			return err
-		}
+		//todo delete after completed
+		//fields, err := convertForm.Run()
+		//if err != nil {
+		//	return err
+		//}
 
-		pbfMap := tiles.NewMap(fields.File)
+		pbfMap := tiles.NewMap("test/maps/andorra.osm.pbf")
 
 		mbtMap, err := pbfMap.Convert(tiles.MBT)
 		if err != nil {
