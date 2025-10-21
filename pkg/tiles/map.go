@@ -33,6 +33,8 @@ func NewMap(file string) *Map {
 }
 
 func (m *Map) Convert(format Format) (*Map, error) {
+	const maxBlobSize = 64 * 1024 * 1024
+
 	switch format {
 	case MBT:
 		file, err := os.Open(m.File)
@@ -58,6 +60,10 @@ func (m *Map) Convert(format Format) (*Map, error) {
 		blobHeader := new(osmpbf.BlobHeader)
 		if err := proto.Unmarshal(buf.Bytes(), blobHeader); err != nil {
 			return nil, err
+		}
+
+		if blobHeader.GetDatasize() > maxBlobSize {
+			return nil, fmt.Errorf("blob size too large: %d", blobHeader.GetDatasize())
 		}
 
 		buf.Reset()
