@@ -37,95 +37,128 @@ func (m *Map) Convert(format Format) (*Map, error) {
 
 	switch format {
 	case MBT:
+		buf := new(bytes.Buffer)
+
 		file, err := os.Open(m.File)
 		if err != nil {
 			return nil, ErrReadFile
 		}
 		defer file.Close()
 
-		buf := new(bytes.Buffer)
+		for {
+			buf.Reset()
 
-		buf.Reset()
-		if _, err = io.CopyN(buf, file, 4); err != nil {
-			return nil, ErrReadFile
-		}
+			if _, err = io.CopyN(buf, file, 4); err != nil {
+				if err == io.EOF {
+					break
+				}
+				return nil, ErrReadFile
+			}
 
-		blobHeaderSize := int64(binary.BigEndian.Uint32(buf.Bytes()))
+			blobHeaderSize := int64(binary.BigEndian.Uint32(buf.Bytes()))
 
-		buf.Reset()
-		if _, err = io.CopyN(buf, file, blobHeaderSize); err != nil {
-			return nil, err
-		}
-
-		blobHeader := new(osmpbf.BlobHeader)
-		if err := proto.Unmarshal(buf.Bytes(), blobHeader); err != nil {
-			return nil, err
-		}
-
-		if blobHeader.GetDatasize() > maxBlobSize {
-			return nil, fmt.Errorf("blob size too large: %d", blobHeader.GetDatasize())
-		}
-
-		buf.Reset()
-		if _, err = io.CopyN(buf, file, int64(blobHeader.GetDatasize())); err != nil {
-			return nil, err
-		}
-
-		blob := new(osmpbf.Blob)
-		if err = proto.Unmarshal(buf.Bytes(), blob); err != nil {
-			return nil, err
-		}
-
-		fmt.Println("Blob header: ", blobHeader)
-		fmt.Println("blob: ", blob)
-
-		data := make([]byte, 0)
-
-		switch blob.Data.(type) {
-		case *osmpbf.Blob_Raw:
-			fmt.Println("\nis row:", blob.GetRaw())
-
-			data = blob.GetRaw()
-		case *osmpbf.Blob_ZlibData:
-			fmt.Println("\nis zlib: ", blob.GetZlibData())
-
-			r, err := zlib.NewReader(bytes.NewReader(blob.GetZlibData()))
-			if err != nil {
+			buf.Reset()
+			if _, err = io.CopyN(buf, file, blobHeaderSize); err != nil {
+				if err == io.EOF {
+					break
+				}
 				return nil, err
 			}
 
-			buf = bytes.NewBuffer(make([]byte, 0, blob.GetRawSize()+bytes.MinRead))
-			_, err = buf.ReadFrom(r)
-			if err != nil {
-				return nil, err
-			}
-			if buf.Len() != int(blob.GetRawSize()) {
-				err = fmt.Errorf("raw blob data size %d but expected %d", buf.Len(), blob.GetRawSize())
+			blobHeader := new(osmpbf.BlobHeader)
+			if err := proto.Unmarshal(buf.Bytes(), blobHeader); err != nil {
 				return nil, err
 			}
 
-			data = buf.Bytes()
+			if blobHeader.GetDatasize() > maxBlobSize {
+				return nil, fmt.Errorf("blob size too large: %d", blobHeader.GetDatasize())
+			}
+
+			buf.Reset()
+			if _, err = io.CopyN(buf, file, int64(blobHeader.GetDatasize())); err != nil {
+				if err == io.EOF {
+					break
+				}
+				return nil, err
+			}
+
+			blob := new(osmpbf.Blob)
+			if err = proto.Unmarshal(buf.Bytes(), blob); err != nil {
+				return nil, err
+			}
+
+			data := make([]byte, 0)
+
+			switch blob.Data.(type) {
+			case *osmpbf.Blob_Raw:
+				data = blob.GetRaw()
+			case *osmpbf.Blob_ZlibData:
+				r, err := zlib.NewReader(bytes.NewReader(blob.GetZlibData()))
+				if err != nil {
+					return nil, err
+				}
+
+				buf = bytes.NewBuffer(make([]byte, 0, blob.GetRawSize()+bytes.MinRead))
+				_, err = buf.ReadFrom(r)
+				if err != nil {
+					return nil, err
+				}
+				if buf.Len() != int(blob.GetRawSize()) {
+					err = fmt.Errorf("raw blob data size %d but expected %d", buf.Len(), blob.GetRawSize())
+					return nil, err
+				}
+
+				data = buf.Bytes()
+			default:
+				fmt.Println("\nunknown blob data type")
+			}
+
+			switch blobHeader.GetType() {
+			case "OSMHeader":
+				headerBlock := &osmpbf.HeaderBlock{}
+				if err = proto.Unmarshal(data, headerBlock); err != nil {
+					return nil, err
+				}
+
+				fmt.Println("\nOSMHeader: ", headerBlock)
+			case "OSMData":
+				primitiveBlock := &osmpbf.PrimitiveBlock{}
+				if err = proto.Unmarshal(data, primitiveBlock); err != nil {
+					return nil, err
+				}
+
+				fmt.Printf("\n\nPrimitive block string table size: %d", len(primitiveBlock.GetStringtable().GetS()))
+
+				for _, group := range primitiveBlock.GetPrimitivegroup() {
+					if dense := group.GetDense(); dense != nil {
+						fmt.Printf("\n\nIsset Dense")
+						fmt.Printf("\nDense LAT: %v", dense.Lat)
+						fmt.Printf("\nDense LON: %v", dense.Lon)
+					}
+
+					if nodes := group.GetNodes(); nodes != nil {
+						fmt.Printf("\n\nIsset Nodes")
+						fmt.Printf("\nNodes: %v", nodes)
+					}
+
+					if ways := group.GetWays(); ways != nil {
+						fmt.Printf("\n\n Isset Ways")
+						fmt.Printf("\nWays: %v", ways)
+					}
+
+					if relations := group.GetRelations(); relations != nil {
+						fmt.Printf("\n\nIsset Relations")
+						fmt.Printf("\nRelations : %v", relations)
+					}
+				}
+
+			default:
+				fmt.Printf("Unknown block type: %s\n", blobHeader.GetType())
+			}
 		}
-
-		primitiveBlock := &osmpbf.PrimitiveBlock{}
-		if err = proto.Unmarshal(data, primitiveBlock); err != nil {
-			return nil, err
-		}
-
-		fmt.Println("\nPrimitive block: ", primitiveBlock)
-
-		for _, v := range primitiveBlock.GetPrimitivegroup() {
-			fmt.Println("\nChangesets: ", v.Changesets)
-			fmt.Println("\nNodes: ", v.Nodes)
-			fmt.Println("\nDense: ", v.Dense)
-			fmt.Println("\nWays: ", v.Ways)
-			fmt.Println("\nRelations: ", v.Relations)
-		}
-
-		return NewMap(m.File), nil
 	}
 
-	return nil, fmt.Errorf("unknown format: %s", format)
+	return NewMap(m.File), nil
 }
 
 func (m *Map) Format() (Format, error) {
