@@ -3,15 +3,10 @@ package tiles
 import (
 	"errors"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/your-map/mbtiles-tool/internal/osm"
-)
-
-type Format string
-
-var (
-	MBT Format = "mbt"
-	OSM Format = "osm"
 )
 
 type Map struct {
@@ -55,5 +50,13 @@ func (m *Map) Convert() (*Map, error) {
 }
 
 func (m *Map) Format() (Format, error) {
-	return OSM, nil
+	filename := filepath.Base(m.File)
+
+	for format, ext := range FormatFileExt {
+		if strings.HasSuffix(filename, ext) {
+			return format, nil
+		}
+	}
+
+	return Unknown, errors.New("unknown format: " + filename)
 }
