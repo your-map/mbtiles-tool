@@ -24,7 +24,7 @@ syntax = "proto2";
 
 option java_package = "crosby.binary";
 package OSMPBF;
-option go_package = "github.com/your-map/mbtiles-tool/internal/osmpbf";
+option go_package = "github.com/your-map/mbtiles-tool/internal/osm/proto";
 
 /* OSM Binary file format
 
