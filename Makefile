@@ -9,4 +9,4 @@ build:
 
 # use command for generate go files from proto
 osm-generate:
-	go generate internal/osmpbf/generate.go
+	go generate internal/osm/proto/generate.go
