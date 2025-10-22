@@ -34,7 +34,11 @@ func (m *Map) Convert() (*Map, error) {
 	if err != nil {
 		return nil, errors.New("error reading file")
 	}
-	defer file.Close()
+	defer func() {
+		if err = file.Close(); err != nil {
+			panic(err)
+		}
+	}()
 
 	switch format {
 	case OSM:
