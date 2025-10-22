@@ -21,7 +21,7 @@ var convertCmd = &cobra.Command{
 
 		pbfMap := tiles.NewMap("test/maps/andorra.osm.pbf")
 
-		mbtMap, err := pbfMap.Convert(tiles.MBT)
+		mbtMap, err := pbfMap.Convert()
 		if err != nil {
 			return err
 		}
