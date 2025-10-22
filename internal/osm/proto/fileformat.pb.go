@@ -25,7 +25,7 @@
 // 	protoc        v6.33.0
 // source: fileformat.proto
 
-package osmpbf
+package proto
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -282,8 +282,8 @@ const file_fileformat_proto_rawDesc = "" +
 	"BlobHeader\x12\x12\n" +
 	"\x04type\x18\x01 \x02(\tR\x04type\x12\x1c\n" +
 	"\tindexdata\x18\x02 \x01(\fR\tindexdata\x12\x1a\n" +
-	"\bdatasize\x18\x03 \x02(\x05R\bdatasizeBA\n" +
-	"\rcrosby.binaryZ0github.com/your-map/mbtiles-tool/internal/osmpbf"
+	"\bdatasize\x18\x03 \x02(\x05R\bdatasizeBD\n" +
+	"\rcrosby.binaryZ3github.com/your-map/mbtiles-tool/internal/osm/proto"
 
 var (
 	file_fileformat_proto_rawDescOnce sync.Once

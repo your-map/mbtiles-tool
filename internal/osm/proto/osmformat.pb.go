@@ -25,7 +25,7 @@
 // 	protoc        v6.33.0
 // source: osmformat.proto
 
-package osmpbf
+package proto
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -1178,8 +1178,8 @@ const file_osmformat_proto_rawDesc = "" +
 	"MemberType\x12\b\n" +
 	"\x04NODE\x10\x00\x12\a\n" +
 	"\x03WAY\x10\x01\x12\f\n" +
-	"\bRELATION\x10\x02BA\n" +
-	"\rcrosby.binaryZ0github.com/your-map/mbtiles-tool/internal/osmpbf"
+	"\bRELATION\x10\x02BD\n" +
+	"\rcrosby.binaryZ3github.com/your-map/mbtiles-tool/internal/osm/proto"
 
 var (
 	file_osmformat_proto_rawDescOnce sync.Once
