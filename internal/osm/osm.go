@@ -101,17 +101,18 @@ func (o *OSM) data(buf *bytes.Buffer, blob *osmp.Blob) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+		buf.Reset()
 
-		buf = bytes.NewBuffer(make([]byte, 0, blob.GetRawSize()+bytes.MinRead))
-		if _, err = buf.ReadFrom(r); err != nil {
+		newBuf := bytes.NewBuffer(make([]byte, 0, blob.GetRawSize()+bytes.MinRead))
+		if _, err = newBuf.ReadFrom(r); err != nil {
 			return nil, err
 		}
 
-		if buf.Len() != int(blob.GetRawSize()) {
-			return nil, fmt.Errorf("raw blob data size %d but expected %d", buf.Len(), blob.GetRawSize())
+		if newBuf.Len() != int(blob.GetRawSize()) {
+			return nil, fmt.Errorf("raw blob data size %d but expected %d", newBuf.Len(), blob.GetRawSize())
 		}
 
-		data = buf.Bytes()
+		data = newBuf.Bytes()
 	}
 
 	return data, nil
