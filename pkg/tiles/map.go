@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/your-map/mbtiles-tool/internal/osm"
+	"github.com/your-map/mbtiles-tool/internal/convert"
 )
 
 type Map struct {
@@ -35,11 +35,12 @@ func (m *Map) Convert() (*Map, error) {
 		}
 	}()
 
+	mapConverter := convert.NewConverter(file)
+
 	switch format {
 	case OSM:
-		om := osm.NewOSM(file)
-
-		if err = om.Read(); err != nil {
+		err = mapConverter.OsmConvert()
+		if err != nil {
 			return nil, err
 		}
 	default:
