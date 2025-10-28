@@ -3,6 +3,6 @@ package osm
 type HeaderType string
 
 var (
-	Header HeaderType = "OSMHeader"
-	Data   HeaderType = "OSMData"
+	Header   HeaderType = "OSMHeader"
+	BlobData HeaderType = "OSMData"
 )
