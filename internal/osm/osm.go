@@ -21,65 +21,79 @@ type OSM struct {
 	File io.Reader
 }
 
+type Data struct {
+	Header *osmp.HeaderBlock
+}
+
 func NewOSM(r io.Reader) *OSM {
 	return &OSM{File: r}
 }
 
-func (o *OSM) Read() error {
-	buf := new(bytes.Buffer)
+// todo add channel for errors
+func (o *OSM) Read() (<-chan *Data, error) {
+	dataChan := make(chan *Data)
 
-	for {
-		headerSize, err := o.headerSize(buf)
-		if err != nil {
-			if err == io.EOF {
+	go func() {
+		defer close(dataChan)
+		buf := new(bytes.Buffer)
+
+		for {
+			headerSize, err := o.headerSize(buf)
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
 				break
 			}
-			return err
-		}
 
-		header, err := o.header(buf, headerSize)
-		if err != nil {
-			if err == io.EOF {
+			header, err := o.header(buf, headerSize)
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
 				break
 			}
-			return err
-		}
 
-		blob, err := o.blob(buf, header)
-		if err != nil {
-			if err == io.EOF {
+			blob, err := o.blob(buf, header)
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
 				break
 			}
-			return err
-		}
 
-		data, err := o.data(buf, blob)
-		if err != nil {
-			return err
-		}
+			data, err := o.data(buf, blob)
+			if err != nil {
+				break
+			}
 
-		err = o.unmarshalData(data, header)
-		if err != nil {
-			return err
-		}
-	}
+			osmData, err := o.unmarshalData(data, header)
+			if err != nil {
+				break
+			}
 
-	return nil
+			dataChan <- osmData
+		}
+	}()
+
+	return dataChan, nil
 }
 
-func (o *OSM) unmarshalData(data []byte, header *osmp.BlobHeader) error {
+func (o *OSM) unmarshalData(data []byte, header *osmp.BlobHeader) (*Data, error) {
+	osmData := new(Data)
+
 	switch HeaderType(header.GetType()) {
 	case Header:
 		headerBlock := &osmp.HeaderBlock{}
 		if err := proto.Unmarshal(data, headerBlock); err != nil {
-			return err
+			return nil, err
 		}
 
-		fmt.Println("header block: ", headerBlock)
-	case Data:
+		osmData.Header = headerBlock
+	case BlobData:
 		primitiveBlock := &osmp.PrimitiveBlock{}
 		if err := proto.Unmarshal(data, primitiveBlock); err != nil {
-			return err
+			return nil, err
 		}
 
 		//for _, group := range primitiveBlock.GetPrimitivegroup() {
@@ -105,10 +119,10 @@ func (o *OSM) unmarshalData(data []byte, header *osmp.BlobHeader) error {
 		//	}
 		//}
 	default:
-		return fmt.Errorf("unknown OSM type: %s", header.GetType())
+		return nil, fmt.Errorf("unknown OSM type: %s", header.GetType())
 	}
 
-	return nil
+	return osmData, nil
 }
 
 func (o *OSM) data(buf *bytes.Buffer, blob *osmp.Blob) ([]byte, error) {
