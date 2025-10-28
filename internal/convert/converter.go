@@ -16,15 +16,31 @@ func NewConverter(r io.Reader) *Converter {
 }
 
 func (c *Converter) OsmConvert() error {
-	om := osm.NewOSM(c.File)
+	newOSM := osm.NewOSM(c.File)
 
-	if err := om.Read(); err != nil {
+	newMBT, err := mbt.NewMBT()
+	if err != nil {
+		return err
+	}
+	defer func(newMBT *mbt.MBT) {
+		err = newMBT.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(newMBT)
+
+	dataChan, err := newOSM.Read()
+	if err != nil {
 		return err
 	}
 
-	err := mbt.Init()
-	if err != nil {
-		return err
+	for data := range dataChan {
+		if data.Header != nil {
+			err = newMBT.WriteMetaData(data.Header)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
