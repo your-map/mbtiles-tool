@@ -18,7 +18,7 @@ func NewConverter(r io.Reader) *Converter {
 func (c *Converter) OsmConvert() error {
 	newOSM := osm.NewOSM(c.File)
 
-	newMBT, err := mbt.NewMBT()
+	newMBT, err := mbt.New()
 	if err != nil {
 		return err
 	}
@@ -37,6 +37,13 @@ func (c *Converter) OsmConvert() error {
 	for data := range dataChan {
 		if data.Header != nil {
 			err = newMBT.WriteMetaData(data.Header)
+			if err != nil {
+				return err
+			}
+		}
+
+		if data.Block != nil {
+			err = newMBT.WriteBlockData(data.Block)
 			if err != nil {
 				return err
 			}
