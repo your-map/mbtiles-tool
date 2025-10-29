@@ -23,6 +23,7 @@ type OSM struct {
 
 type Data struct {
 	Header *osmp.HeaderBlock
+	Block  *osmp.PrimitiveBlock
 }
 
 func NewOSM(r io.Reader) *OSM {
@@ -96,28 +97,7 @@ func (o *OSM) unmarshalData(data []byte, header *osmp.BlobHeader) (*Data, error)
 			return nil, err
 		}
 
-		//for _, group := range primitiveBlock.GetPrimitivegroup() {
-		//	if dense := group.GetDense(); dense != nil {
-		//		fmt.Printf("\n\nIsset Dense")
-		//		fmt.Printf("\nDense LAT: %v", dense.Lat)
-		//		fmt.Printf("\nDense LON: %v", dense.Lon)
-		//	}
-		//
-		//	if nodes := group.GetNodes(); nodes != nil {
-		//		fmt.Printf("\n\nIsset Nodes")
-		//		fmt.Printf("\nNodes: %v", nodes)
-		//	}
-		//
-		//	if ways := group.GetWays(); ways != nil {
-		//		fmt.Printf("\n\n Isset Ways")
-		//		fmt.Printf("\nWays: %v", ways)
-		//	}
-		//
-		//	if relations := group.GetRelations(); relations != nil {
-		//		fmt.Printf("\n\nIsset Relations")
-		//		fmt.Printf("\nRelations : %v", relations)
-		//	}
-		//}
+		osmData.Block = primitiveBlock
 	default:
 		return nil, fmt.Errorf("unknown OSM type: %s", header.GetType())
 	}
