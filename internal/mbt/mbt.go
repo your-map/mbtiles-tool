@@ -14,7 +14,7 @@ type MBT struct {
 	db *sql.DB
 }
 
-func NewMBT() (*MBT, error) {
+func New() (*MBT, error) {
 	db, err := sql.Open("sqlite3", "test.db")
 	if err != nil {
 		return nil, err
@@ -33,6 +33,11 @@ func NewMBT() (*MBT, error) {
 	return &MBT{
 		db: db,
 	}, nil
+}
+
+func (m *MBT) WriteBlockData(data *proto.PrimitiveBlock) error {
+	fmt.Println(data.GetStringtable().String())
+	return nil
 }
 
 func (m *MBT) WriteMetaData(metaData *proto.HeaderBlock) error {
