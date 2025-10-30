@@ -74,7 +74,11 @@ func (m *MBT) WriteMetaData(metaData *proto.HeaderBlock) error {
 	}
 
 	if metaData.Bbox != nil {
-		metadataFields["bounds"], metadataFields["center"] = executeGridMap(metaData.Bbox)
+		grid := NewGrid(metaData.Bbox)
+		bounds, center := grid.Execute()
+
+		metadataFields["bounds"] = bounds
+		metadataFields["center"] = center
 	}
 
 	for name, value := range metadataFields {
@@ -85,21 +89,6 @@ func (m *MBT) WriteMetaData(metaData *proto.HeaderBlock) error {
 	}
 
 	return nil
-}
-
-func executeGridMap(bbox *proto.HeaderBBox) (string, string) {
-	left := float64(bbox.GetLeft()) / 1e9
-	right := float64(bbox.GetRight()) / 1e9
-	top := float64(bbox.GetTop()) / 1e9
-	bottom := float64(bbox.GetBottom()) / 1e9
-
-	centerLon := (left + right) / 2
-	centerLat := (bottom + top) / 2
-
-	bounds := fmt.Sprintf("%f,%f,%f,%f", left, bottom, right, top)
-	center := fmt.Sprintf("%f,%f,%d", centerLon, centerLat, 10)
-
-	return bounds, center
 }
 
 func (m *MBT) Close() error {
