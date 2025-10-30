@@ -2,7 +2,6 @@ package mbt
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"os"
 
@@ -36,12 +35,12 @@ func New() (*MBT, error) {
 }
 
 func (m *MBT) WriteBlockData(data *proto.PrimitiveBlock) error {
-	fmt.Println(data.GetStringtable().String())
+	fmt.Println(data.GetStringtable())
 	return nil
 }
 
 func (m *MBT) WriteMetaData(metaData *proto.HeaderBlock) error {
-	stmt, err := m.db.Prepare("INSERT INTO metadata (name, value) VALUES (?, ?)")
+	stmt, err := m.db.Prepare("INSERT OR REPLACE INTO metadata (name, value) VALUES (?, ?)")
 	if err != nil {
 		return err
 	}
@@ -52,61 +51,34 @@ func (m *MBT) WriteMetaData(metaData *proto.HeaderBlock) error {
 		}
 	}(stmt)
 
+	metadataFields := map[string]string{
+		"name":    "OSM Data",
+		"version": "1.3",
+		"format":  "pbf",
+		"type":    "overlay",
+		"minzoom": "0",
+		"maxzoom": "14",
+	}
+
 	if len(metaData.RequiredFeatures) > 0 {
-		_, err = stmt.Exec("name", metaData.RequiredFeatures[0])
+		metadataFields["name"] = metaData.RequiredFeatures[0]
+	}
+
+	if metaData.Bbox != nil {
+		metadataFields["bounds"], metadataFields["center"] = executeGridMap(metaData.Bbox)
+	}
+
+	for name, value := range metadataFields {
+		_, err = stmt.Exec(name, value)
 		if err != nil {
 			return err
 		}
 	}
 
-	_, err = stmt.Exec("version", "1.3")
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec("format", "pbf")
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec("type", "overlay")
-	if err != nil {
-		return err
-	}
-
-	bounds, center, err := executeGridMap(metaData.Bbox)
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec("bounds", bounds)
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec("center", center)
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec("minzoom", "0")
-	if err != nil {
-		return err
-	}
-
-	_, err = stmt.Exec("maxzoom", "14")
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func executeGridMap(bbox *proto.HeaderBBox) (string, string, error) {
-	if bbox == nil {
-		return "", "", errors.New("empty bbox")
-	}
-
+func executeGridMap(bbox *proto.HeaderBBox) (string, string) {
 	left := float64(bbox.GetLeft()) / 1e9
 	right := float64(bbox.GetRight()) / 1e9
 	top := float64(bbox.GetTop()) / 1e9
@@ -118,7 +90,7 @@ func executeGridMap(bbox *proto.HeaderBBox) (string, string, error) {
 	bounds := fmt.Sprintf("%f,%f,%f,%f", left, bottom, right, top)
 	center := fmt.Sprintf("%f,%f,%d", centerLon, centerLat, 10)
 
-	return bounds, center, nil
+	return bounds, center
 }
 
 func (m *MBT) Close() error {
