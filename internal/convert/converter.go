@@ -50,5 +50,10 @@ func (c *Converter) OsmConvert() error {
 		}
 	}
 
+	err = newMBT.GenerateTiles()
+	if err != nil {
+		return err
+	}
+
 	return newMBT.FinalizeMetadata()
 }
