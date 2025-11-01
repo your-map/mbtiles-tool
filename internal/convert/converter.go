@@ -18,7 +18,7 @@ func NewConverter(r io.Reader) *Converter {
 func (c *Converter) OsmConvert() error {
 	newOSM := osm.NewOSM(c.File)
 
-	newMBT, err := mbt.New()
+	newMBT, err := mbt.NewMBT()
 	if err != nil {
 		return err
 	}
@@ -50,5 +50,5 @@ func (c *Converter) OsmConvert() error {
 		}
 	}
 
-	return nil
+	return newMBT.FinalizeMetadata()
 }
