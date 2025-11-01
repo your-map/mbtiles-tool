@@ -2,6 +2,8 @@ package mbt
 
 import (
 	"database/sql"
+	"fmt"
+	"log"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -16,7 +18,7 @@ type MBT struct {
 }
 
 func NewMBT() (*MBT, error) {
-	db, err := sql.Open("sqlite3", "test.db")
+	db, err := sql.Open("sqlite3", "test.mbtiles")
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +58,9 @@ func (m *MBT) WriteMetaData(metaData *proto.HeaderBlock) error {
 	}
 	defer func(stmt *sql.Stmt) {
 		err = stmt.Close()
-		panic(err)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}(stmt)
 
 	metadataFields := map[string]string{
@@ -101,15 +105,42 @@ func (m *MBT) WriteMetaData(metaData *proto.HeaderBlock) error {
 func (m *MBT) WriteBlockData(data *proto.PrimitiveBlock) error {
 	stringTable := data.GetStringtable().GetS()
 
+	// Подготовка statement для вставки тайлов
+	stmt, err := m.db.Prepare("INSERT OR REPLACE INTO tiles (zoom_level, tile_column, tile_row, tile_data) VALUES (?, ?, ?, ?)")
+	if err != nil {
+		return fmt.Errorf("failed to prepare tiles statement: %w", err)
+	}
+	defer stmt.Close()
+
+	// Собираем все точки для упрощенной визуализации
+	var points []struct {
+		lat, lon float64
+		tags     map[string]string
+	}
+
 	for _, group := range data.GetPrimitivegroup() {
+		// Обработка обычных нод
 		for _, node := range group.GetNodes() {
 			m.analyzePrimitive("nodes", node.GetKeys(), node.GetVals(), stringTable, "Point")
+
+			lat, lon := m.decodeCoordinates(node.GetLat(), node.GetLon(), data)
+			tags := m.extractTags(node.GetKeys(), node.GetVals(), stringTable)
+
+			points = append(points, struct {
+				lat, lon float64
+				tags     map[string]string
+			}{lat, lon, tags})
 		}
 
+		// Обработка dense nodes
 		if dense := group.GetDense(); dense != nil {
 			m.analyzeDenseNodes(dense, stringTable)
+
+			densePoints := m.extractDenseNodes(dense, data, stringTable)
+			points = append(points, densePoints...)
 		}
 
+		// Анализ ways и relations (пока без генерации тайлов)
 		for _, way := range group.GetWays() {
 			m.analyzePrimitive("ways", way.GetKeys(), way.GetVals(), stringTable, "LineString")
 		}
@@ -119,7 +150,8 @@ func (m *MBT) WriteBlockData(data *proto.PrimitiveBlock) error {
 		}
 	}
 
-	return nil
+	// Создаем простые тайлы с точками
+	return m.createSimpleTiles(points, stmt)
 }
 
 func (m *MBT) Close() error {

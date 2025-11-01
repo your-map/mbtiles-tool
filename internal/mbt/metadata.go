@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/your-map/mbtiles-tool/internal/osm/proto"
 )
@@ -159,7 +160,9 @@ func (m *MBT) FinalizeMetadata() error {
 	}
 	defer func(stmt *sql.Stmt) {
 		err = stmt.Close()
-		panic(err)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}(stmt)
 
 	_, err = stmt.Exec("json", string(jsonBytes))
